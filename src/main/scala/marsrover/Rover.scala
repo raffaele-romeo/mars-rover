@@ -5,7 +5,7 @@ import marsrover.Direction._
 import marsrover.Command._
 
 trait Rover {
-  def getDirections(from: Position, to: Coordinate2D): List[Command]
+  def autopilot(from: Position, to: Coordinate2D): List[Command]
 
   def move(command: Command): State[Position, Command]
 
@@ -13,7 +13,7 @@ trait Rover {
 
 final class LiveRover(roverContext: RoverContext) extends Rover {
 
-  override def getDirections(from: Position, to: Coordinate2D): List[Command] = {
+  override def autopilot(from: Position, to: Coordinate2D): List[Command] = {
 
     require(from.coordinate2D.x >= 0 && from.coordinate2D.x < roverContext.gridDimensions)
     require(from.coordinate2D.y >= 0 && from.coordinate2D.y < roverContext.gridDimensions)

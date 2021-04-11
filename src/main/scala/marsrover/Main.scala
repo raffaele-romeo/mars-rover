@@ -13,7 +13,7 @@ object Main {
     val rover = new LiveRover(roverContext)
 
     // Write instructions to go from point A to B
-    val commands = rover.getDirections(Position(Coordinate2D(17, 16), South), Coordinate2D(5, 19))
+    val commands = rover.autopilot(Position(Coordinate2D(17, 16), South), Coordinate2D(5, 19))
     writeFile("output/instructions.txt", commands.map(_.toString))
 
     // Get destination point given a list of instructions

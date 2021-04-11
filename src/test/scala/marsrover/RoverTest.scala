@@ -49,7 +49,7 @@ class RoverTest extends AnyFlatSpec {
 
     val expectedOutput = List(RotateClockwise, RotateClockwise, Forward, Forward)
 
-    assert (rover.getDirections(initialPosition, finalPosition) === expectedOutput)
+    assert (rover.autopilot(initialPosition, finalPosition) === expectedOutput)
   }
 
   it should "throw IllegalArgumentException if coordinate are out of the grid" in {
@@ -57,7 +57,7 @@ class RoverTest extends AnyFlatSpec {
     val finalPosition = Coordinate2D(2, 0)
 
     assertThrows[IllegalArgumentException] {
-      rover.getDirections(initialPosition, finalPosition)
+      rover.autopilot(initialPosition, finalPosition)
     }
   }
 
