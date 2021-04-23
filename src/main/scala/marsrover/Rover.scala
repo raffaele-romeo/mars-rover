@@ -3,56 +3,72 @@ package marsrover
 import cats.data._
 import marsrover.Direction._
 import marsrover.Command._
+import cats.effect.IO
 
-trait Rover {
-  def autopilot(from: Position, to: Coordinate2D): List[Command]
+trait Rover[F[_]] {
 
-  def move(command: Command): State[Position, Command]
+  def autopilot(from: Position, to: Coordinate2D): F[List[Command]]
+
+  def move(command: Command): StateT[F, Position, Command]
 
 }
 
-final class LiveRover(roverContext: RoverContext) extends Rover {
+final class LiveRover(roverContext: RoverContext) extends Rover[IO] {
 
-  override def autopilot(from: Position, to: Coordinate2D): List[Command] = {
-
-    require(from.coordinate2D.x >= 0 && from.coordinate2D.x < roverContext.gridDimensions)
-    require(from.coordinate2D.y >= 0 && from.coordinate2D.y < roverContext.gridDimensions)
-    require(to.x >= 0 && to.x < roverContext.gridDimensions)
-    require(to.y >= 0 && to.y < roverContext.gridDimensions)
-
-    getDirectionBaseOnCoordinateX(from, to.x) concat getDirectionBaseOnCoordinateY(from.coordinate2D.x, to.x, from.coordinate2D.y, to.y)
+  override def autopilot(from: Position, to: Coordinate2D): IO[List[Command]] = {
+    IO.pure(
+      getDirectionBaseOnCoordinateX(from, to.x) concat getDirectionBaseOnCoordinateY(
+        from.coordinate2D.x,
+        to.x,
+        from.coordinate2D.y,
+        to.y
+      )
+    )
   }
 
-  override def move(command: Command): State[Position, Command] = State { s =>
+  override def move(command: Command): StateT[IO, Position, Command] = StateT { s =>
     command match {
-      case Command.Forward => s.direction match {
+      case Command.Forward =>
+        s.direction match {
+          case Direction.North =>
+            IO.println(s.direction) *>
+              IO(
+                s.copy(coordinate2D =
+                  Coordinate2D(s.coordinate2D.x, Math.floorMod(s.coordinate2D.y + 1, roverContext.gridDimensions))
+                ),
+                command
+              )
 
-        case Direction.North =>
-          if (s.coordinate2D.y + 1 < roverContext.gridDimensions)
-            (s.copy(coordinate2D = Coordinate2D(s.coordinate2D.x, s.coordinate2D.y + 1)), command)
-          else
-            (s.copy(coordinate2D = Coordinate2D(s.coordinate2D.x, 0)), command)
+          case Direction.South =>
+            IO.println(s.direction) *>
+              IO.pure(
+                s.copy(coordinate2D =
+                  Coordinate2D(s.coordinate2D.x, Math.floorMod(s.coordinate2D.y - 1, roverContext.gridDimensions))
+                ),
+                command
+              )
 
-        case Direction.South =>
-          if (s.coordinate2D.y - 1 >= 0)
-            (s.copy(coordinate2D = Coordinate2D(s.coordinate2D.x, s.coordinate2D.y - 1)), command)
-          else
-            (s.copy(coordinate2D = Coordinate2D(s.coordinate2D.x, roverContext.gridDimensions - 1)), command)
+          case Direction.East =>
+            IO.println(s.direction) *>
+              IO(
+                s.copy(coordinate2D =
+                  Coordinate2D(Math.floorMod(s.coordinate2D.x + 1, roverContext.gridDimensions), s.coordinate2D.y)
+                ),
+                command
+              )
 
-        case Direction.East =>
-          if (s.coordinate2D.x + 1 < roverContext.gridDimensions)
-            (s.copy(coordinate2D = Coordinate2D(s.coordinate2D.x + 1, s.coordinate2D.y)), command)
-          else
-            (s.copy(coordinate2D = Coordinate2D(0, s.coordinate2D.y)), command)
+          case Direction.West =>
+            IO.println(s.direction) *>
+              IO.pure(
+                s.copy(coordinate2D =
+                  Coordinate2D(Math.floorMod(s.coordinate2D.x - 1, roverContext.gridDimensions), s.coordinate2D.y)
+                ),
+                command
+              )
 
-        case Direction.West =>
-          if (s.coordinate2D.x - 1 >= 0)
-            (s.copy(coordinate2D = Coordinate2D(s.coordinate2D.x - 1, s.coordinate2D.y)), command)
-          else
-            (s.copy(coordinate2D = Coordinate2D(roverContext.gridDimensions - 1, s.coordinate2D.y)), command)
-
-      }
-      case _ => (s.copy(direction = s.direction.changeDirectionBasedOn(command)), command)
+        }
+      case _ =>
+        IO.println(s.direction) *> IO(s.copy(direction = s.direction.changeDirectionBasedOn(command)), command)
     }
   }
 

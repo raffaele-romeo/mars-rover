@@ -5,8 +5,10 @@ import org.scalatest.flatspec.AnyFlatSpec
 import marsrover.Direction._
 import marsrover.Command._
 import cats.implicits._
+import org.scalatest.matchers.must.Matchers
 
-class RoverTest extends AnyFlatSpec {
+/*
+class RoverTest extends AnyFlatSpec with Matchers{
 
   val roverContext: RoverContext = RoverContext(3, List.empty)
 
@@ -43,6 +45,13 @@ class RoverTest extends AnyFlatSpec {
     assert(rover.move(Forward).run(initialPosition).value._1 === finalPosition)
   }
 
+  it should "reappears on the opposite side of the grid if the rover moves off the grid test 2" in {
+    val initialPosition = Position(Coordinate2D(2, 0), South)
+    val finalPosition = Position(Coordinate2D(2, 2), South)
+
+    assert(rover.move(Forward).run(initialPosition).value._1 === finalPosition)
+  }
+
   it should "get instructions from initial position to final position" in {
     val initialPosition = Position(Coordinate2D(2, 2), North)
     val finalPosition = Coordinate2D(2, 0)
@@ -72,4 +81,7 @@ class RoverTest extends AnyFlatSpec {
 
     assert(output._1 === finalPosition)
   }
+
+
 }
+ */

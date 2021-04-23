@@ -6,5 +6,6 @@ scalaVersion := "2.13.5"
 
 libraryDependencies ++= Seq(
   Libraries.cats,
+  Libraries.catsEffects,
   Libraries.scalaTest
 )
