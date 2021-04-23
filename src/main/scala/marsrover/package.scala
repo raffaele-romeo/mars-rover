@@ -83,10 +83,7 @@ package object marsrover {
     }
   }
 
-  final case class Coordinate2D(x: Int, y: Int) {
-
-
-  }
+  final case class Coordinate2D(x: Int, y: Int)
 
   final case class Position(coordinate2D: Coordinate2D, direction: Direction)
 

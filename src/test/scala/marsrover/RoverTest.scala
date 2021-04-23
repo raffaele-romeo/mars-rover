@@ -1,87 +1,83 @@
 package marsrover
 
 import marsrover.Direction.South
-import org.scalatest.flatspec.AnyFlatSpec
 import marsrover.Direction._
 import marsrover.Command._
 import cats.implicits._
-import org.scalatest.matchers.must.Matchers
+import cats.effect.IO
+import munit.CatsEffectSuite
 
-/*
-class RoverTest extends AnyFlatSpec with Matchers{
+class RoverTest extends CatsEffectSuite {
 
   val roverContext: RoverContext = RoverContext(3, List.empty)
 
   val rover = new LiveRover(roverContext)
 
-  "Rover" should "be able to move forward within the Grid" in {
+  test("Rover should be able to move forward within the Grid") {
 
     val initialPosition = Position(Coordinate2D(1, 1), South)
     val finalPosition = Position(Coordinate2D(1, 0), South)
 
-    assert(rover.move(Forward).run(initialPosition).value._1 === finalPosition)
+    rover.move(Forward).run(initialPosition) flatMap (result => IO(assertEquals(result._1, finalPosition)))
   }
 
-  it should "be able to rotate clockwise" in {
+  test("it should be able to rotate clockwise") {
 
     val initialPosition = Position(Coordinate2D(1, 1), South)
     val finalPosition = Position(Coordinate2D(1, 1), West)
 
-    assert(rover.move(RotateClockwise).run(initialPosition).value._1 === finalPosition)
+    rover.move(RotateClockwise).run(initialPosition) flatMap (result => IO(assertEquals(result._1, finalPosition)))
   }
 
-  it should "be able to rotate anticlockwise" in {
+  test("it should be able to rotate anticlockwise") {
 
     val initialPosition = Position(Coordinate2D(1, 1), South)
     val finalPosition = Position(Coordinate2D(1, 1), East)
 
-    assert(rover.move(RotateAnticlockwise).run(initialPosition).value._1 === finalPosition)
+    rover.move(RotateAnticlockwise).run(initialPosition) flatMap (result => IO(assertEquals(result._1, finalPosition)))
   }
 
-  it should "reappears on the opposite side of the grid if the rover moves off the grid" in {
+  test("it should reappears on the opposite side of the grid if the rover moves off the grid") {
     val initialPosition = Position(Coordinate2D(2, 2), North)
     val finalPosition = Position(Coordinate2D(2, 0), North)
 
-    assert(rover.move(Forward).run(initialPosition).value._1 === finalPosition)
+    rover.move(Forward).run(initialPosition) flatMap (result => IO(assertEquals(result._1, finalPosition)))
   }
 
-  it should "reappears on the opposite side of the grid if the rover moves off the grid test 2" in {
+  test("it should reappears on the opposite side of the grid if the rover moves off the grid test 2") {
     val initialPosition = Position(Coordinate2D(2, 0), South)
     val finalPosition = Position(Coordinate2D(2, 2), South)
 
-    assert(rover.move(Forward).run(initialPosition).value._1 === finalPosition)
+    rover.move(Forward).run(initialPosition) flatMap (result => IO(assertEquals(result._1, finalPosition)))
   }
 
-  it should "get instructions from initial position to final position" in {
+  test("it should get instructions from initial position to final position") {
     val initialPosition = Position(Coordinate2D(2, 2), North)
     val finalPosition = Coordinate2D(2, 0)
 
     val expectedOutput = List(RotateClockwise, RotateClockwise, Forward, Forward)
 
-    assert (rover.autopilot(initialPosition, finalPosition) === expectedOutput)
+    rover.autopilot(initialPosition, finalPosition) flatMap (result => IO(assertEquals(result, expectedOutput)))
   }
 
-  it should "throw IllegalArgumentException if coordinate are out of the grid" in {
+  test("it should throw IllegalArgumentException if coordinate are out of the grid") {
     val initialPosition = Position(Coordinate2D(3, 2), North)
     val finalPosition = Coordinate2D(2, 0)
 
-    assertThrows[IllegalArgumentException] {
-      rover.autopilot(initialPosition, finalPosition)
+    intercept[IllegalArgumentException]{
+      rover.autopilot(initialPosition, finalPosition).unsafeRunSync()
     }
+
   }
 
-  it should "be able to perform multiple movements" in {
+  test("it should be able to perform multiple movements") {
     val initialPosition = Position(Coordinate2D(2, 2), North)
     val finalPosition = Position(Coordinate2D(2, 2), West)
 
     val commands = List(Forward, RotateAnticlockwise, RotateAnticlockwise, Forward, RotateClockwise)
 
     val chainCommands = commands.traverse(rover.move)
-    val output = chainCommands.run(initialPosition).value
 
-    assert(output._1 === finalPosition)
+    chainCommands.run(initialPosition) flatMap (result => IO(assertEquals(result._1, finalPosition)))
   }
-
-
 }
- */

@@ -11,10 +11,10 @@ object Main extends IOApp {
 
     val rover = new LiveRover(roverContext)
 
-    for {
-      commands <- rover.autopilot(Position(Coordinate2D(17, 16), South), Coordinate2D(5, 19))
-      _ <- commands.traverse(rover.move).run(Position(Coordinate2D(0, 0), South))
-    } yield ExitCode.Success
+    (for {
+      commands <- rover.autopilot(Position(Coordinate2D(17, 17), South), Coordinate2D(5, 19))
+      output <- commands.traverse(rover.move).run(Position(Coordinate2D(17, 17), South))
+    } yield output._1).flatMap(IO.println).as(ExitCode.Success)
 
   }
 

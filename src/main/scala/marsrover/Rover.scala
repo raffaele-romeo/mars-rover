@@ -4,6 +4,8 @@ import cats.data._
 import marsrover.Direction._
 import marsrover.Command._
 import cats.effect.IO
+import org.typelevel.log4cats.{Logger, SelfAwareStructuredLogger}
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 trait Rover[F[_]] {
 
@@ -15,15 +17,26 @@ trait Rover[F[_]] {
 
 final class LiveRover(roverContext: RoverContext) extends Rover[IO] {
 
+  implicit def unsafeLogger: SelfAwareStructuredLogger[IO] = Slf4jLogger.getLogger[IO]
+
   override def autopilot(from: Position, to: Coordinate2D): IO[List[Command]] = {
-    IO.pure(
-      getDirectionBaseOnCoordinateX(from, to.x) concat getDirectionBaseOnCoordinateY(
-        from.coordinate2D.x,
-        to.x,
-        from.coordinate2D.y,
-        to.y
+
+    IO.delay(
+      require(
+        isInGrid(from.coordinate2D.x, roverContext.gridDimensions) &&
+          isInGrid(from.coordinate2D.y, roverContext.gridDimensions) &&
+          isInGrid(to.x, roverContext.gridDimensions) &&
+          isInGrid(to.y, roverContext.gridDimensions)
       )
-    )
+    ) *>
+      IO.pure(
+        getDirectionBaseOnCoordinateX(from, to.x) concat getDirectionBaseOnCoordinateY(
+          from.coordinate2D.x,
+          to.x,
+          from.coordinate2D.y,
+          to.y
+        )
+      ).onError(e => Logger[IO].error(e)("Coordinates need to be inside the grid!"))
   }
 
   override def move(command: Command): StateT[IO, Position, Command] = StateT { s =>
@@ -31,7 +44,7 @@ final class LiveRover(roverContext: RoverContext) extends Rover[IO] {
       case Command.Forward =>
         s.direction match {
           case Direction.North =>
-            IO.println(s.direction) *>
+            Logger[IO].info(s.direction.toString) *>
               IO(
                 s.copy(coordinate2D =
                   Coordinate2D(s.coordinate2D.x, Math.floorMod(s.coordinate2D.y + 1, roverContext.gridDimensions))
@@ -40,7 +53,7 @@ final class LiveRover(roverContext: RoverContext) extends Rover[IO] {
               )
 
           case Direction.South =>
-            IO.println(s.direction) *>
+            Logger[IO].info(s.direction.toString) *>
               IO.pure(
                 s.copy(coordinate2D =
                   Coordinate2D(s.coordinate2D.x, Math.floorMod(s.coordinate2D.y - 1, roverContext.gridDimensions))
@@ -49,7 +62,7 @@ final class LiveRover(roverContext: RoverContext) extends Rover[IO] {
               )
 
           case Direction.East =>
-            IO.println(s.direction) *>
+            Logger[IO].info(s.direction.toString) *>
               IO(
                 s.copy(coordinate2D =
                   Coordinate2D(Math.floorMod(s.coordinate2D.x + 1, roverContext.gridDimensions), s.coordinate2D.y)
@@ -58,7 +71,7 @@ final class LiveRover(roverContext: RoverContext) extends Rover[IO] {
               )
 
           case Direction.West =>
-            IO.println(s.direction) *>
+            Logger[IO].info(s.direction.toString) *>
               IO.pure(
                 s.copy(coordinate2D =
                   Coordinate2D(Math.floorMod(s.coordinate2D.x - 1, roverContext.gridDimensions), s.coordinate2D.y)
@@ -68,7 +81,7 @@ final class LiveRover(roverContext: RoverContext) extends Rover[IO] {
 
         }
       case _ =>
-        IO.println(s.direction) *> IO(s.copy(direction = s.direction.changeDirectionBasedOn(command)), command)
+        Logger[IO].info(s.direction.toString) *> IO(s.copy(direction = s.direction.changeDirectionBasedOn(command)), command)
     }
   }
 
@@ -92,6 +105,9 @@ final class LiveRover(roverContext: RoverContext) extends Rover[IO] {
   }
 
   private def getMoveForwards(x: Int, y: Int): List[Command] = List.fill(Math.abs(x - y))(Forward)
+
+  private def isInGrid(coordinate: Int, gridDimension: Int): Boolean =
+    coordinate >= 0 && coordinate < gridDimension
 
   private def isThereAMountain(x: Int, y: Int): Boolean = roverContext.mountainsOnGrid.contains(Coordinate2D(x, y))
 
