@@ -26,5 +26,8 @@ docs/src/main/tut/contributing.md
 result*
 .bsp
 null
+.bloop
+.metals
+.vscode
 
 
